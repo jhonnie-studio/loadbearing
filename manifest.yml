@@ -1,0 +1,162 @@
+modules:
+  macro:
+    - key: tripwire-assumption
+      resource: macro
+      render: native
+      resolver:
+        function: resolver
+      title: Tripwire assumption
+      description: Turn a plan assumption into a live check against Jira. It turns red the moment reality breaks it.
+      config:
+        openOnInsert: true
+
+  jira:issueContext:
+    - key: tripwire-issue-context
+      resource: issue
+      render: native
+      resolver:
+        function: resolver
+      title: Tripwire
+      label: Tripwire
+
+  jira:globalPage:
+    - key: tripwire-dashboard
+      resource: dashboard
+      render: native
+      resolver:
+        function: resolver
+      title: Tripwire
+
+  trigger:
+    - key: tripwire-issue-events
+      function: issue-events
+      events:
+        - avi:jira:created:issue
+        - avi:jira:updated:issue
+        - avi:jira:deleted:issue
+      filter:
+        ignoreSelf: true
+
+  scheduledTrigger:
+    - key: tripwire-hourly
+      function: scheduled
+      interval: hour
+
+  consumer:
+    - key: tripwire-recheck-consumer
+      queue: tripwire-recheck
+      function: recheck
+
+  rovo:agent:
+    - key: tripwire-agent
+      name: Tripwire
+      description: Knows which plan assumptions still hold, which broke, and which Jira work is exposed.
+      prompt: >
+        You are Tripwire, an assistant that watches the assumptions behind a team's plans.
+        Each assumption was written on a Confluence plan page and is bound to a live Jira check
+        (a JQL count, a field sum, or a deadline). An assumption is HOLDING, AT RISK, or BROKEN.
+
+        Use list-assumptions to see every watched assumption with its live state, reason,
+        source plan page and dependent Jira work. Use issue-risk when the user asks about a
+        specific Jira issue. Use find-assumption when the user asks about a topic (for example
+        "the launch" or "capacity"). Use recheck-assumptions when the user wants fresh numbers.
+
+        Answer briefly. Lead with anything BROKEN, say exactly why in numbers, link the plan
+        page, list the dependent issues, and suggest the single next step for the owner.
+        Never invent assumptions or numbers that the actions did not return.
+      conversationStarters:
+        - Which of our plan assumptions are broken right now?
+        - Is any work on my team exposed to a broken assumption?
+        - Re-check every assumption against live Jira data
+      actions:
+        - list-assumptions
+        - issue-risk
+        - find-assumption
+        - recheck-assumptions
+
+  rovo:mcp:
+    - key: tripwire-mcp
+      name: Tripwire MCP
+      tools:
+        - list-assumptions
+        - issue-risk
+        - find-assumption
+        - recheck-assumptions
+
+  action:
+    - key: list-assumptions
+      name: List plan assumptions
+      function: action-list
+      actionVerb: GET
+      description: >
+        Returns every plan assumption Tripwire watches, with its live state (broken, at risk,
+        holding), the reason in numbers, the Confluence plan page, and the dependent Jira issues.
+    - key: issue-risk
+      name: Check a Jira issue for broken assumptions
+      function: action-issue
+      actionVerb: GET
+      description: >
+        Given a Jira issue key, returns the plan assumptions that this issue depends on and
+        whether they currently hold.
+      inputs:
+        issueKey:
+          title: Issue key
+          type: string
+          required: true
+          description: The Jira issue key, for example OPS-12
+    - key: find-assumption
+      name: Find assumptions about a topic
+      function: action-find
+      actionVerb: GET
+      description: Finds watched plan assumptions that mention a topic, such as launch, capacity or a team name.
+      inputs:
+        topic:
+          title: Topic
+          type: string
+          required: true
+          description: A word or short phrase to look for in the assumptions
+    - key: recheck-assumptions
+      name: Re-check all assumptions now
+      function: action-recheck
+      actionVerb: GET
+      description: Re-measures every assumption against live Jira data right now and returns the fresh results.
+
+  function:
+    - key: resolver
+      handler: index.handler
+    - key: issue-events
+      handler: index.onIssueEvent
+    - key: scheduled
+      handler: index.onSchedule
+    - key: recheck
+      handler: index.onRecheck
+    - key: action-list
+      handler: index.actionListAssumptions
+    - key: action-issue
+      handler: index.actionIssueRisk
+    - key: action-find
+      handler: index.actionFindAssumption
+    - key: action-recheck
+      handler: index.actionRecheck
+
+resources:
+  - key: macro
+    path: src/frontend/macro.jsx
+  - key: issue
+    path: src/frontend/issue.jsx
+  - key: dashboard
+    path: src/frontend/dashboard.jsx
+
+permissions:
+  scopes:
+    - read:jira-work
+    - write:jira-work
+    - storage:app
+    - read:page:confluence
+
+app:
+  runtime:
+    name: nodejs24.x
+    memoryMB: 256
+    architecture: arm64
+  id: ari:cloud:ecosystem::app/00000000-0000-0000-0000-000000000000
