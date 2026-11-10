@@ -34,7 +34,7 @@ const Config = () => (
     <Label>Number field to sum (only for “Sum”)</Label>
     <Textfield name="field" placeholder="customfield_10016 (story points)" />
     <Label>Deadline (only for “finished by a date”)</Label>
-    <DatePicker name="deadline" />
+    <DatePicker name="deadline" placeholder="Pick a date" />
     <Label>Dependent work (JQL) — flagged when this breaks</Label>
     <TextArea name="impactJql" placeholder='project = WEB AND labels = launch' />
     <Label>Owner — notified when it breaks</Label>
@@ -56,6 +56,8 @@ function clean(cfg) {
     owner: pickValue(cfg.owner),
   };
 }
+
+const work = (n) => (n === 1 ? '1 piece of work' : `${n} pieces of work`);
 
 const App = () => {
   const config = useConfig();
@@ -111,7 +113,7 @@ const App = () => {
         <Muted>Watching: {a.def.jql}</Muted>
         {a.impact?.length > 0 && (
           <Stack space="space.050">
-            <Muted>{a.state === 'broken' ? `${a.impact.length} pieces of work are now exposed:` : `${a.impact.length} pieces of work depend on this:`}</Muted>
+            <Muted>{a.state === 'broken' ? `${work(a.impact.length)} ${a.impact.length === 1 ? 'is' : 'are'} now exposed:` : `${work(a.impact.length)} depend${a.impact.length === 1 ? 's' : ''} on this:`}</Muted>
             <TagGroup>
               {a.impact.slice(0, 12).map((i) => (
                 <Tag key={i.key} text={`${i.key} ${i.summary.slice(0, 28)}`} color={a.state === 'broken' ? 'redLight' : a.state === 'at-risk' ? 'yellowLight' : 'greenLight'} />

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import ForgeReconciler, { Box, Link, SectionMessage, Spinner, Stack, Strong, Text } from '@forge/react';
+import ForgeReconciler, { Box, Inline, Link, SectionMessage, Spinner, Stack, Strong, Text } from '@forge/react';
 import { invoke } from '@forge/bridge';
 import { History, Muted, StateLozenge, ago, card } from './common.jsx';
 
@@ -28,7 +28,7 @@ const App = () => {
       {risks.map((a) => (
         <Box key={a.id} xcss={card(a)}>
           <Stack space="space.075">
-            <StateLozenge a={a} />
+            <Inline><StateLozenge a={a} /></Inline>
             <Text><Strong>{a.statement}</Strong></Text>
             <Text>{a.last?.reason}</Text>
             {a.pageUrl && <Link href={a.pageUrl} openNewTab>Open plan: {a.pageTitle || 'Confluence page'}</Link>}
