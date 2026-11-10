@@ -69,7 +69,7 @@ const App = () => {
     if (!cfg?.statement) return undefined;
     let alive = true;
     invoke('register', { config: cfg, pageId: ctx?.extension?.content?.id }).then((r) => alive && setA(r));
-    const t = setInterval(() => invoke('get', {}).then((r) => alive && r && setA(r)), 4000);
+    const t = setInterval(() => invoke('get', { home: a?.home }).then((r) => alive && r && setA(r)), 4000);
     return () => { alive = false; clearInterval(t); };
   }, [cfgKey, ctx?.extension?.content?.id]);
 
@@ -87,7 +87,7 @@ const App = () => {
 
   const recheck = async () => {
     setBusy(true);
-    try { setA(await invoke('recheck', { id: a.id })); } finally { setBusy(false); }
+    try { setA(await invoke('recheck', { id: a.id, home: a.home })); } finally { setBusy(false); }
   };
 
   return (

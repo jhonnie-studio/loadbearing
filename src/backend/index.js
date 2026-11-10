@@ -1,6 +1,6 @@
 import Resolver from '@forge/resolver';
 import { Queue } from '@forge/events';
-import { describe, evaluate, evaluateAll, register, risksForIssue } from './service.js';
+import { describe, evaluate, evaluateAll, freshen, register, risksForIssue } from './service.js';
 import { deleteAssumption, getAssumption, listAssumptions } from './store.js';
 
 const recheckQueue = new Queue({ key: 'tripwire-recheck' });
@@ -14,10 +14,10 @@ resolver.define('register', async ({ payload, context }) => {
   return register({ id, pageId, config: payload.config || {}, siteUrl: context.siteUrl });
 });
 
-resolver.define('get', async ({ payload, context }) => getAssumption(payload.id || context.localId));
+resolver.define('get', async ({ payload, context }) => freshen(await getAssumption(payload.id || context.localId, payload.home)));
 
 resolver.define('recheck', async ({ payload }) => {
-  const a = await getAssumption(payload.id);
+  const a = await getAssumption(payload.id, payload.home);
   return a ? evaluate(a, 'manual re-check') : null;
 });
 
@@ -26,7 +26,7 @@ resolver.define('list', async () => listAssumptions());
 resolver.define('recheckAll', async () => evaluateAll('manual re-check'));
 
 resolver.define('remove', async ({ payload }) => {
-  await deleteAssumption(payload.id);
+  await deleteAssumption(payload.id, payload.home);
   return listAssumptions();
 });
 
@@ -39,12 +39,15 @@ export const handler = resolver.getDefinitions();
 
 // ---------- Jira product events: re-check now, and again shortly after (search index lag) ----------
 export async function onIssueEvent(event) {
-  await evaluateAll(`Jira ${event?.eventType?.split(':').pop() || 'event'}: ${event?.issue?.key || ''}`.trim());
-  await recheckQueue.push({ body: { cause: `follow-up after ${event?.issue?.key || 'issue change'}` }, delayInSeconds: 6 });
+  console.log('tripwire issue event', event?.eventType, event?.issue?.key);
+  const project = event?.issue?.fields?.project?.key || event?.issue?.key?.split('-')[0];
+  const projects = project ? [project] : undefined;
+  await evaluateAll(`Jira ${event?.eventType?.split(':').pop() || 'event'}: ${event?.issue?.key || ''}`.trim(), projects);
+  await recheckQueue.push({ body: { cause: `follow-up after ${event?.issue?.key || 'issue change'}`, projects }, delayInSeconds: 6 });
 }
 
 export async function onRecheck(event) {
-  await evaluateAll(event?.body?.cause || 'follow-up');
+  await evaluateAll(event?.body?.cause || 'follow-up', event?.body?.projects);
 }
 
 export async function onSchedule() {

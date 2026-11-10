@@ -1,7 +1,7 @@
 import api, { route } from '@forge/api';
 import { judge, measurementJql, normalizeConfig, transition, validate } from './engine.js';
 import { countIssues, sumField, impactIssues, setAtRiskLabel, commentTransition } from './jira.js';
-import { getAssumption, listAssumptions, saveAssumption } from './store.js';
+import { getAssumption, homeProject, listAssumptions, saveAssumption } from './store.js';
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -22,13 +22,13 @@ async function pageInfo(pageId) {
 export async function register({ id, pageId, config, siteUrl }) {
   const def = normalizeConfig(config);
   const errors = validate(def);
-  const existing = await getAssumption(id);
+  const existing = await getAssumption(id, homeProject(def));
   const sameDef = existing && JSON.stringify(existing.def) === JSON.stringify(def);
   if (errors.length) return { ...(existing || {}), id, def, errors };
 
+  // A changed definition is a new assumption: start its history fresh.
   let a = existing && sameDef ? existing : {
-    id, def, state: 'unknown', history: [], impact: [], createdAt: new Date().toISOString(),
-    ...(existing ? { history: existing.history, createdAt: existing.createdAt } : {}),
+    id, def, state: 'unknown', history: [], impact: [], createdAt: existing?.createdAt || new Date().toISOString(),
   };
   a.statement = def.statement;
   a.owner = def.owner;
@@ -48,7 +48,7 @@ async function measure(def) {
 }
 
 /** Re-measure one assumption, store the result and fire side-effects on a state change. */
-export async function evaluate(a, cause = 'check') {
+export async function evaluate(a, cause = 'check', { notify: mayNotify = true } = {}) {
   const def = a.def;
   let result;
   try {
@@ -71,8 +71,22 @@ export async function evaluate(a, cause = 'check') {
     a.history = [...a.history, { at: now, state: a.state, value: result.value, reason: result.reason, cause }].slice(-40);
   }
   if (kind === 'tripped') a.trippedAt = now;
+
+  // Notify Jira work exactly once per break/recovery, whichever evaluator sees it first.
+  // `notified` records what the dependent issues were last told ('broken' or 'ok').
+  const target = a.state === 'broken' ? 'broken' : 'ok';
+  let send = null;
+  if (mayNotify && result.state !== 'error' && (a.notified || 'ok') !== target) {
+    const stored = await getAssumption(a.id, a.home).catch(() => null);
+    if ((stored?.notified || 'ok') !== target) {
+      send = target === 'broken' ? 'tripped' : 'restored';
+      a.notified = target;
+    } else {
+      a.notified = stored.notified;
+    }
+  }
   await saveAssumption(a);
-  if (kind === 'tripped' || (kind === 'restored' && prev === 'broken')) await notify(a, kind);
+  if (send) await notify(a, send);
   return a;
 }
 
@@ -93,14 +107,21 @@ async function notify(a, kind) {
   }
 }
 
-export async function evaluateAll(cause = 'check') {
-  const all = await listAssumptions();
+export async function evaluateAll(cause = 'check', projectKeys) {
+  const all = await listAssumptions(projectKeys);
   const out = [];
   for (const a of all) {
     if (!a.def || validate(a.def).length) continue;
     out.push(await evaluate(a, cause));
   }
   return out;
+}
+
+/** Re-measure only if the last check is older than maxAgeMs (used by open pages). */
+export async function freshen(a, maxAgeMs = 10000) {
+  if (!a || validate(a.def).length) return a;
+  if (a.checkedAt && Date.now() - Date.parse(a.checkedAt) < maxAgeMs) return a;
+  return evaluate(a, 'live check', { notify: false });
 }
 
 export async function risksForIssue(issueKey) {

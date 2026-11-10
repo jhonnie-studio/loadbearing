@@ -159,6 +159,7 @@ permissions:
   scopes:
     - read:jira-work
     - write:jira-work
+    - manage:jira-project
     - storage:app
     - read:page:confluence
 
