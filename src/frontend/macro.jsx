@@ -3,7 +3,7 @@ import ForgeReconciler, {
   Box, Button, DatePicker, Heading, Inline, Label, SectionMessage, Select, Spinner, Stack, Strong,
   Tag, TagGroup, Text, TextArea, Textfield, UserPicker, useConfig, useProductContext,
 } from '@forge/react';
-import { invoke } from '@forge/bridge';
+import { invoke, view } from '@forge/bridge';
 import { History, Muted, StateLozenge, ago, card, pickValue } from './common.jsx';
 
 const TYPE_OPTIONS = [
@@ -68,7 +68,12 @@ const App = () => {
   useEffect(() => {
     if (!cfg?.statement) return undefined;
     let alive = true;
-    invoke('register', { config: cfg, pageId: ctx?.extension?.content?.id }).then((r) => alive && setA(r));
+    view.getContext().catch(() => ({})).then((vc) => invoke('register', {
+      config: cfg,
+      pageId: ctx?.extension?.content?.id,
+      siteUrl: vc?.siteUrl,
+      pageTitle: ctx?.extension?.content?.title,
+    })).then((r) => alive && setA(r));
     const t = setInterval(() => invoke('get', { home: a?.home }).then((r) => alive && r && setA(r)), 4000);
     return () => { alive = false; clearInterval(t); };
   }, [cfgKey, ctx?.extension?.content?.id]);

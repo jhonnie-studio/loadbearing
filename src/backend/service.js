@@ -11,18 +11,22 @@ const today = () => new Date().toISOString().slice(0, 10);
 async function pageInfo(pageId) {
   if (!pageId) return {};
   try {
-    const res = await api.asApp().requestConfluence(route`/wiki/api/v2/pages/${pageId}`, { headers: { Accept: 'application/json' } });
-    if (!res.ok) return {};
+    const res = await api.asUser().requestConfluence(route`/wiki/api/v2/pages/${pageId}`, { headers: { Accept: 'application/json' } });
+    if (!res.ok) {
+      console.error('page lookup failed', res.status, (await res.text()).slice(0, 200));
+      return {};
+    }
     const p = await res.json();
     const base = p._links?.base || '';
     return { pageTitle: p.title, pageUrl: p._links?.webui ? `${base}${p._links.webui}` : undefined };
-  } catch {
+  } catch (e) {
+    console.error('page lookup error', e.message);
     return {};
   }
 }
 
 /** Called by the Confluence macro every time it renders with a config. */
-export async function register({ id, pageId, config, siteUrl }) {
+export async function register({ id, pageId, config, siteUrl, pageTitle }) {
   const def = normalizeConfig(config);
   const errors = validate(def);
   const existing = await getAssumption(id, homeProject(def));
@@ -37,6 +41,8 @@ export async function register({ id, pageId, config, siteUrl }) {
   a.owner = def.owner;
   if (!a.pageId || a.pageId !== pageId || !a.pageTitle) {
     Object.assign(a, { pageId }, await pageInfo(pageId));
+    if (!a.pageTitle && pageTitle) a.pageTitle = pageTitle;
+    if (a.pageUrl && a.pageUrl.startsWith('/') && siteUrl) a.pageUrl = `${siteUrl}/wiki${a.pageUrl}`;
     if (!a.pageUrl && siteUrl && pageId) a.pageUrl = `${siteUrl}/wiki/pages/viewpage.action?pageId=${pageId}`;
   }
   if (!sameDef || !a.checkedAt) a = await evaluate(a, 'configured', { notify: false });

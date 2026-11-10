@@ -14,7 +14,7 @@ const resolver = new Resolver();
 resolver.define('register', async ({ payload, context }) => {
   const id = context.localId || payload.localId;
   const pageId = context.extension?.content?.id || payload.pageId;
-  return register({ id, pageId, config: payload.config || {}, siteUrl: context.siteUrl });
+  return register({ id, pageId, config: payload.config || {}, siteUrl: payload.siteUrl || context.siteUrl, pageTitle: payload.pageTitle });
 });
 
 resolver.define('get', async ({ payload, context }) => freshen(await getAssumption(payload.id || context.localId, payload.home)));
