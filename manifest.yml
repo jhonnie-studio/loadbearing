@@ -6,7 +6,8 @@ modules:
       resolver:
         function: resolver
       title: Tripwire assumption
-      description: Turn a plan assumption into a live check against Jira. It turns red the moment reality breaks it.
+      description: Turn a plan assumption into a live check against Jira. It turns red
+        the moment reality breaks it.
       config:
         openOnInsert: true
 
@@ -50,20 +51,24 @@ modules:
   rovo:agent:
     - key: tripwire-agent
       name: Tripwire
-      description: Knows which plan assumptions still hold, which broke, and which Jira work is exposed.
+      description: Knows which plan assumptions still hold, which broke, and which
+        Jira work is exposed.
       prompt: >
-        You are Tripwire, an assistant that watches the assumptions behind a team's plans.
-        Each assumption was written on a Confluence plan page and is bound to a live Jira check
-        (a JQL count, a field sum, or a deadline). An assumption is HOLDING, AT RISK, or BROKEN.
+        You are Tripwire, an assistant that watches the assumptions behind a
+        team's plans. Each assumption was written on a Confluence plan page and
+        is bound to a live Jira check (a JQL count, a field sum, or a deadline).
+        An assumption is HOLDING, AT RISK, or BROKEN.
 
-        Use list-assumptions to see every watched assumption with its live state, reason,
-        source plan page and dependent Jira work. Use issue-risk when the user asks about a
-        specific Jira issue. Use find-assumption when the user asks about a topic (for example
-        "the launch" or "capacity"). Use recheck-assumptions when the user wants fresh numbers.
+        Use list-assumptions to see every watched assumption with its live
+        state, reason, source plan page and dependent Jira work. Use issue-risk
+        when the user asks about a specific Jira issue. Use find-assumption when
+        the user asks about a topic (for example "the launch" or "capacity").
+        Use recheck-assumptions when the user wants fresh numbers.
 
-        Answer briefly. Lead with anything BROKEN, say exactly why in numbers, link the plan
-        page, list the dependent issues, and suggest the single next step for the owner.
-        Never invent assumptions or numbers that the actions did not return.
+        Answer briefly. Lead with anything BROKEN, say exactly why in numbers,
+        link the plan page, list the dependent issues, and suggest the single
+        next step for the owner. Never invent assumptions or numbers that the
+        actions did not return.
       conversationStarters:
         - Which of our plan assumptions are broken right now?
         - Is any work on my team exposed to a broken assumption?
@@ -89,15 +94,16 @@ modules:
       function: action-list
       actionVerb: GET
       description: >
-        Returns every plan assumption Tripwire watches, with its live state (broken, at risk,
-        holding), the reason in numbers, the Confluence plan page, and the dependent Jira issues.
+        Returns every plan assumption Tripwire watches, with its live state
+        (broken, at risk, holding), the reason in numbers, the Confluence plan
+        page, and the dependent Jira issues.
     - key: issue-risk
       name: Check a Jira issue for broken assumptions
       function: action-issue
       actionVerb: GET
       description: >
-        Given a Jira issue key, returns the plan assumptions that this issue depends on and
-        whether they currently hold.
+        Given a Jira issue key, returns the plan assumptions that this issue
+        depends on and whether they currently hold.
       inputs:
         issueKey:
           title: Issue key
@@ -108,7 +114,8 @@ modules:
       name: Find assumptions about a topic
       function: action-find
       actionVerb: GET
-      description: Finds watched plan assumptions that mention a topic, such as launch, capacity or a team name.
+      description: Finds watched plan assumptions that mention a topic, such as
+        launch, capacity or a team name.
       inputs:
         topic:
           title: Topic
@@ -119,7 +126,8 @@ modules:
       name: Re-check all assumptions now
       function: action-recheck
       actionVerb: GET
-      description: Re-measures every assumption against live Jira data right now and returns the fresh results.
+      description: Re-measures every assumption against live Jira data right now and
+        returns the fresh results.
 
   function:
     - key: resolver
@@ -159,4 +167,4 @@ app:
     name: nodejs24.x
     memoryMB: 256
     architecture: arm64
-  id: ari:cloud:ecosystem::app/00000000-0000-0000-0000-000000000000
+  id: ari:cloud:ecosystem::app/fc193347-383c-4527-b2e4-26c93d6fdd56
