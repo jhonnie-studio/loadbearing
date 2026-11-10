@@ -1,4 +1,7 @@
 import api, { route } from '@forge/api';
+import { Queue } from '@forge/events';
+
+const notifyQueue = new Queue({ key: 'tripwire-recheck' });
 import { judge, measurementJql, normalizeConfig, transition, validate } from './engine.js';
 import { countIssues, sumField, impactIssues, setAtRiskLabel, commentTransition } from './jira.js';
 import { getAssumption, homeProject, listAssumptions, saveAssumption } from './store.js';
@@ -36,7 +39,7 @@ export async function register({ id, pageId, config, siteUrl }) {
     Object.assign(a, { pageId }, await pageInfo(pageId));
     if (!a.pageUrl && siteUrl && pageId) a.pageUrl = `${siteUrl}/wiki/pages/viewpage.action?pageId=${pageId}`;
   }
-  if (!sameDef || !a.checkedAt) a = await evaluate(a, 'configured');
+  if (!sameDef || !a.checkedAt) a = await evaluate(a, 'configured', { notify: false });
   else await saveAssumption(a);
   return a;
 }
@@ -72,22 +75,27 @@ export async function evaluate(a, cause = 'check', { notify: mayNotify = true } 
   }
   if (kind === 'tripped') a.trippedAt = now;
 
-  // Notify Jira work exactly once per break/recovery, whichever evaluator sees it first.
-  // `notified` records what the dependent issues were last told ('broken' or 'ok').
-  const target = a.state === 'broken' ? 'broken' : 'ok';
-  let send = null;
-  if (mayNotify && result.state !== 'error' && (a.notified || 'ok') !== target) {
-    const stored = await getAssumption(a.id, a.home).catch(() => null);
-    if ((stored?.notified || 'ok') !== target) {
-      send = target === 'broken' ? 'tripped' : 'restored';
-      a.notified = target;
-    } else {
-      a.notified = stored.notified;
-    }
-  }
+  // Side-effects on Jira work are never done here: a serialised queue job (one at a time per
+  // assumption) compares the stored state with what the work was last told, so concurrent
+  // evaluations can never comment twice.
   await saveAssumption(a);
-  if (send) await notify(a, send);
+  const target = a.state === 'broken' ? 'broken' : 'ok';
+  if (mayNotify && result.state !== 'error' && (a.notified || 'ok') !== target) {
+    await notifyQueue.push({ body: { kind: 'notify', id: a.id, home: a.home }, concurrency: { key: `n-${a.id}`.slice(0, 60), limit: 1 } })
+      .catch((e) => console.error('queue push failed', e.message));
+  }
   return a;
+}
+
+/** Queue consumer: tell dependent work about a break/recovery exactly once. */
+export async function deliverNotification(id, home) {
+  const a = await getAssumption(id, home);
+  if (!a) return;
+  const target = a.state === 'broken' ? 'broken' : 'ok';
+  if ((a.notified || 'ok') === target) return;
+  a.notified = target;
+  await saveAssumption(a);
+  await notify(a, target === 'broken' ? 'tripped' : 'restored');
 }
 
 async function notify(a, kind) {
@@ -107,12 +115,12 @@ async function notify(a, kind) {
   }
 }
 
-export async function evaluateAll(cause = 'check', projectKeys) {
+export async function evaluateAll(cause = 'check', projectKeys, opts = {}) {
   const all = await listAssumptions(projectKeys);
   const out = [];
   for (const a of all) {
     if (!a.def || validate(a.def).length) continue;
-    out.push(await evaluate(a, cause));
+    out.push(await evaluate(a, cause, opts));
   }
   return out;
 }

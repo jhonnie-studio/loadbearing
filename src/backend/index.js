@@ -1,9 +1,12 @@
 import Resolver from '@forge/resolver';
 import { Queue } from '@forge/events';
-import { describe, evaluate, evaluateAll, freshen, register, risksForIssue } from './service.js';
+import { deliverNotification, describe, evaluate, evaluateAll, freshen, register, risksForIssue } from './service.js';
 import { deleteAssumption, getAssumption, listAssumptions } from './store.js';
 
 const recheckQueue = new Queue({ key: 'tripwire-recheck' });
+
+// Only the Jira installation changes Jira work (labels, comments); the Confluence side just displays.
+const isJira = (context) => String(context?.installContext || '').includes('jira');
 
 // ---------- UI resolvers (macro, Jira issue panel, dashboard) ----------
 const resolver = new Resolver();
@@ -16,14 +19,14 @@ resolver.define('register', async ({ payload, context }) => {
 
 resolver.define('get', async ({ payload, context }) => freshen(await getAssumption(payload.id || context.localId, payload.home)));
 
-resolver.define('recheck', async ({ payload }) => {
+resolver.define('recheck', async ({ payload, context }) => {
   const a = await getAssumption(payload.id, payload.home);
-  return a ? evaluate(a, 'manual re-check') : null;
+  return a ? evaluate(a, 'manual re-check', { notify: isJira(context) }) : null;
 });
 
 resolver.define('list', async () => listAssumptions());
 
-resolver.define('recheckAll', async () => evaluateAll('manual re-check'));
+resolver.define('recheckAll', async ({ context }) => evaluateAll('manual re-check', undefined, { notify: isJira(context) }));
 
 resolver.define('remove', async ({ payload }) => {
   await deleteAssumption(payload.id, payload.home);
@@ -47,11 +50,12 @@ export async function onIssueEvent(event) {
 }
 
 export async function onRecheck(event) {
+  if (event?.body?.kind === 'notify') return deliverNotification(event.body.id, event.body.home);
   await evaluateAll(event?.body?.cause || 'follow-up', event?.body?.projects);
 }
 
-export async function onSchedule() {
-  await evaluateAll('scheduled check');
+export async function onSchedule(event, context) {
+  await evaluateAll('scheduled check', undefined, { notify: isJira(context) });
 }
 
 // ---------- Rovo agent actions (also exposed as MCP tools) ----------
@@ -73,7 +77,7 @@ export async function actionIssueRisk(payload) {
 }
 
 export async function actionRecheck() {
-  const all = await evaluateAll('Rovo re-check');
+  const all = await evaluateAll('Rovo re-check', undefined, { notify: false });
   if (!all.length) return 'Nothing to check yet.';
   return ['Re-checked every assumption against live Jira data:', '', ...all.map(describe)].join('\n');
 }
