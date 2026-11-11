@@ -1,4 +1,4 @@
-// Pure evaluation logic for Tripwire assumptions (no Forge imports, unit-testable).
+// Pure evaluation logic for Loadbearing assumptions (no Forge imports, unit-testable).
 
 export const CHECK_TYPES = {
   count: 'Number of Jira issues matching a JQL query',
@@ -43,7 +43,7 @@ export function normalizeConfig(cfg = {}) {
 export function validate(def) {
   const errors = [];
   if (!def.statement) errors.push('Write the assumption in plain words.');
-  if (!def.jql) errors.push('Add the JQL query Tripwire should watch.');
+  if (!def.jql) errors.push('Add the JQL query Loadbearing should watch.');
   if (def.checkType === 'sum' && !def.field) errors.push('Pick the numeric field to sum (for example customfield_10016).');
   if (def.checkType === 'deadline' && !/^\d{4}-\d{2}-\d{2}$/.test(def.deadline)) errors.push('Set the deadline date.');
   return errors;

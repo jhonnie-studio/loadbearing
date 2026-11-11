@@ -1,3 +1,6 @@
+# Module keys, the queue key and storage keys still say "tripwire": legacy keys, kept for
+# installed sites (the app was called Tripwire before). Changing them would orphan existing
+# macros and stored assumptions. Everything users see says Loadbearing.
 modules:
   macro:
     - key: tripwire-assumption
@@ -5,7 +8,7 @@ modules:
       render: native
       resolver:
         function: resolver
-      title: Tripwire assumption
+      title: Loadbearing assumption
       description: Turn a plan assumption into a live check against Jira. It turns red
         the moment reality breaks it.
       config:
@@ -17,8 +20,8 @@ modules:
       render: native
       resolver:
         function: resolver
-      title: Tripwire
-      label: Tripwire
+      title: Loadbearing
+      label: Loadbearing
 
   jira:globalPage:
     - key: tripwire-dashboard
@@ -26,7 +29,7 @@ modules:
       render: native
       resolver:
         function: resolver
-      title: Tripwire
+      title: Loadbearing
 
   trigger:
     - key: tripwire-issue-events
@@ -50,11 +53,11 @@ modules:
 
   rovo:agent:
     - key: tripwire-agent
-      name: Tripwire
+      name: Loadbearing
       description: Knows which plan assumptions still hold, which broke, and which
         Jira work is exposed.
       prompt: >
-        You are Tripwire, an assistant that watches the assumptions behind a
+        You are Loadbearing, an assistant that watches the assumptions behind a
         team's plans. Each assumption was written on a Confluence plan page and
         is bound to a live Jira check (a JQL count, a field sum, or a deadline).
         An assumption is HOLDING, AT RISK, or BROKEN.
@@ -81,7 +84,7 @@ modules:
 
   rovo:mcp:
     - key: tripwire-mcp
-      name: Tripwire MCP
+      name: Loadbearing MCP
       tools:
         - list-assumptions
         - issue-risk
@@ -94,7 +97,7 @@ modules:
       function: action-list
       actionVerb: GET
       description: >
-        Returns every plan assumption Tripwire watches, with its live state
+        Returns every plan assumption Loadbearing watches, with its live state
         (broken, at risk, holding), the reason in numbers, the Confluence plan
         page, and the dependent Jira issues.
     - key: issue-risk

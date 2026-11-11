@@ -4,6 +4,7 @@
 import api, { route } from '@forge/api';
 import { kvs } from '@forge/kvs';
 
+// Legacy keys, kept for installed sites (the app was called Tripwire before).
 const PROP = 'tripwire.assumptions';
 const homeKey = (id) => `tripwire:home:${id}`;
 
@@ -66,7 +67,7 @@ export async function deleteAssumption(id, home) {
   await writeProject(projectKey, (await readProject(projectKey)).filter((a) => a.id !== id));
 }
 
-/** Projects that hold Tripwire assumptions. */
+/** Projects that hold Loadbearing assumptions. */
 async function projectsWithAssumptions() {
   const keys = [];
   let startAt = 0;

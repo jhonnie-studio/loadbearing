@@ -37,3 +37,10 @@ test('validation', () => {
   assert.equal(validate(normalizeConfig({})).length, 2);
   assert.equal(validate(def({ checkType: 'deadline' })).length, 1);
 });
+
+import { LABEL, labelOps } from '../src/backend/labels.js';
+test('at-risk label is generic and the legacy tripwire label is cleaned up', () => {
+  assert.equal(LABEL, 'assumption-at-risk');
+  assert.deepEqual(labelOps(true), [{ add: 'assumption-at-risk' }, { remove: 'tripwire-at-risk' }]);
+  assert.deepEqual(labelOps(false), [{ remove: 'assumption-at-risk' }, { remove: 'tripwire-at-risk' }]);
+});

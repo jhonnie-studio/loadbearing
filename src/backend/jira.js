@@ -1,6 +1,5 @@
 import api, { route } from '@forge/api';
-
-const LABEL = 'tripwire-at-risk';
+import { labelOps } from './labels.js';
 
 async function jira(path, opts = {}) {
   const res = await api.asApp().requestJira(path, {
@@ -58,7 +57,7 @@ export async function impactIssues(jql) {
 export async function setAtRiskLabel(issueKey, on) {
   await jira(route`/rest/api/3/issue/${issueKey}`, {
     method: 'PUT',
-    body: JSON.stringify({ update: { labels: [on ? { add: LABEL } : { remove: LABEL }] } }),
+    body: JSON.stringify({ update: { labels: labelOps(on) } }),
   });
 }
 
@@ -70,7 +69,7 @@ function text(t, marks) {
 export async function commentTransition(issueKey, a, kind) {
   const tripped = kind === 'tripped';
   const content = [
-    text(tripped ? '⚡ Tripwire: a plan assumption this work depends on just broke. ' : '✅ Tripwire: the assumption this work depends on holds again. ', [{ type: 'strong' }]),
+    text(tripped ? '🔴 Loadbearing: a plan assumption this work depends on just broke. ' : '✅ Loadbearing: the assumption this work depends on holds again. ', [{ type: 'strong' }]),
   ];
   const para2 = [text('Assumption: '), text(`“${a.statement}”`, [{ type: 'em' }])];
   if (a.pageUrl) para2.push(text(' (from '), text(a.pageTitle || 'the plan', [{ type: 'link', attrs: { href: a.pageUrl } }]), text(')'));

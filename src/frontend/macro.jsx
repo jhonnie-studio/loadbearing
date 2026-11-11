@@ -23,7 +23,7 @@ const Config = () => (
   <>
     <Label>The assumption, in plain words</Label>
     <TextArea name="statement" placeholder="We launch only while fewer than 3 Sev-1 bugs are open" />
-    <Label>How Tripwire checks it</Label>
+    <Label>How Loadbearing checks it</Label>
     <Select name="checkType" options={TYPE_OPTIONS} defaultValue={TYPE_OPTIONS[0]} />
     <Label>JQL to watch</Label>
     <TextArea name="jql" placeholder='project = OPS AND priority = Highest AND statusCategory != Done' />
@@ -83,13 +83,13 @@ const App = () => {
   if (!cfg?.statement) {
     return (
       <SectionMessage title="Add the assumption your plan depends on" appearance="information">
-        <Text>Edit the page, select this Tripwire block and click the pencil to describe the assumption and the Jira query that proves it.</Text>
+        <Text>Edit the page, select this Loadbearing block and click the pencil to describe the assumption and the Jira query that proves it.</Text>
       </SectionMessage>
     );
   }
   if (!a) return <Inline space="space.100"><Spinner size="small" /><Text>Checking against Jira…</Text></Inline>;
   if (a.errors?.length) {
-    return <SectionMessage title="Tripwire needs a bit more" appearance="warning">{a.errors.map((e) => <Text key={e}>{e}</Text>)}</SectionMessage>;
+    return <SectionMessage title="Loadbearing needs a bit more" appearance="warning">{a.errors.map((e) => <Text key={e}>{e}</Text>)}</SectionMessage>;
   }
 
   const recheck = async () => {
@@ -102,7 +102,7 @@ const App = () => {
       <Stack space="space.100">
         <Inline spread="space-between" alignBlock="center">
           <Inline space="space.100" alignBlock="center">
-            <Text>⚡</Text>
+            <Text>🏛️</Text>
             <StateLozenge a={a} />
             <Muted>checked {ago(a.checkedAt)}</Muted>
           </Inline>

@@ -1,8 +1,8 @@
 {
-  "name": "tripwire",
+  "name": "loadbearing",
   "version": "1.0.0",
   "private": true,
-  "description": "Tripwire: bind plan assumptions in Confluence to live Jira checks",
+  "description": "Loadbearing: bind plan assumptions in Confluence to live Jira checks",
   "license": "MIT",
   "scripts": {
     "test": "node --test test/"

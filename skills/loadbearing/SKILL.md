@@ -1,11 +1,11 @@
 ---
-name: tripwire
-description: Check whether the assumptions behind a team's Confluence plans still hold against live Jira data, using the Tripwire Forge app's MCP tools. Use when the user asks if a plan, launch or deadline is still safe, which plan assumptions broke, or whether a Jira issue depends on a broken assumption.
+name: loadbearing
+description: Check whether the assumptions behind a team's Confluence plans still hold against live Jira data, using the Loadbearing Forge app's MCP tools. Use when the user asks if a plan, launch or deadline is still safe, which plan assumptions broke, or whether a Jira issue depends on a broken assumption.
 ---
 
-# Tripwire
+# Loadbearing
 
-Tripwire is an Atlassian Forge app. Teams write plan assumptions in Confluence
+Loadbearing is an Atlassian Forge app. Teams write plan assumptions in Confluence
 ("we launch only while fewer than 3 Sev-1 bugs are open") and bind each one to a
 live Jira check (a JQL count, a field sum, or a deadline). Each assumption is
 always in one of three states:
@@ -16,8 +16,8 @@ always in one of three states:
 
 ## Connect
 
-1. A site admin installs Tripwire and turns on its MCP tools in
-   admin.atlassian.com → Apps → Sites → (your site) → Connected apps → Tripwire.
+1. A site admin installs Loadbearing and turns on its MCP tools in
+   admin.atlassian.com → Apps → Sites → (your site) → Connected apps → Loadbearing.
 2. Add this MCP server to your agent (OAuth 2.1; you approve the site and tools):
    `https://mcp.atlassian.com/forge/fc193347-383c-4527-b2e4-26c93d6fdd56`
 3. Tool calls run with your own Atlassian permissions.

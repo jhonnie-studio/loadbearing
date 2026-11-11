@@ -55,7 +55,7 @@ const App = () => {
     <Stack space="space.300">
       <Inline spread="space-between" alignBlock="center">
         <Stack space="space.050">
-          <Heading size="large">⚡ Tripwire</Heading>
+          <Heading size="large">🏛️ Loadbearing</Heading>
           <Muted>Every plan rests on assumptions. These are yours, checked live against Jira.</Muted>
         </Stack>
         <Button appearance="primary" onClick={recheckAll} isLoading={busy}>Re-check all now</Button>
@@ -70,7 +70,7 @@ const App = () => {
 
       {all.length === 0 && (
         <SectionMessage title="No assumptions yet" appearance="information">
-          <Text>Open a plan in Confluence, type /Tripwire and describe what your plan depends on.</Text>
+          <Text>Open a plan in Confluence, type /Loadbearing and describe what your plan depends on.</Text>
         </SectionMessage>
       )}
 
@@ -83,7 +83,7 @@ const App = () => {
             </Inline>
             <Text>{a.last?.reason}</Text>
             <Inline space="space.100" alignBlock="center">
-              <Text>📄 {a.pageTitle || 'Plan'}</Text><Text>→</Text><Text>⚡ assumption</Text><Text>→</Text>
+              <Text>📄 {a.pageTitle || 'Plan'}</Text><Text>→</Text><Text>🏛️ assumption</Text><Text>→</Text>
               <Text>{`${a.impact?.length || 0} exposed`}</Text>
             </Inline>
             <TagGroup>

@@ -1,6 +1,7 @@
 import api, { route } from '@forge/api';
 import { Queue } from '@forge/events';
 
+// Legacy key, kept for installed sites (the app was called Tripwire before).
 const notifyQueue = new Queue({ key: 'tripwire-recheck' });
 import { judge, measurementJql, normalizeConfig, transition, validate } from './engine.js';
 import { countIssues, sumField, impactIssues, setAtRiskLabel, commentTransition } from './jira.js';

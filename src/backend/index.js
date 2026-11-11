@@ -3,6 +3,7 @@ import { Queue } from '@forge/events';
 import { deliverNotification, describe, evaluate, evaluateAll, freshen, register, risksForIssue } from './service.js';
 import { deleteAssumption, getAssumption, listAssumptions } from './store.js';
 
+// Legacy key, kept for installed sites (the app was called Tripwire before).
 const recheckQueue = new Queue({ key: 'tripwire-recheck' });
 
 // Only the Jira installation changes Jira work (labels, comments); the Confluence side just displays.
@@ -42,7 +43,7 @@ export const handler = resolver.getDefinitions();
 
 // ---------- Jira product events: re-check now, and again shortly after (search index lag) ----------
 export async function onIssueEvent(event) {
-  console.log('tripwire issue event', event?.eventType, event?.issue?.key);
+  console.log('loadbearing issue event', event?.eventType, event?.issue?.key);
   const project = event?.issue?.fields?.project?.key || event?.issue?.key?.split('-')[0];
   const projects = project ? [project] : undefined;
   await evaluateAll(`Jira ${event?.eventType?.split(':').pop() || 'event'}: ${event?.issue?.key || ''}`.trim(), projects);
@@ -61,7 +62,7 @@ export async function onSchedule(event, context) {
 // ---------- Rovo agent actions (also exposed as MCP tools) ----------
 export async function actionListAssumptions() {
   const all = await listAssumptions();
-  if (!all.length) return 'No assumptions are being watched yet. Add the Tripwire macro to a Confluence plan page.';
+  if (!all.length) return 'No assumptions are being watched yet. Add the Loadbearing macro to a Confluence plan page.';
   const order = { broken: 0, 'at-risk': 1, holding: 2, unknown: 3 };
   all.sort((a, b) => (order[a.state] ?? 9) - (order[b.state] ?? 9));
   const counts = all.reduce((m, a) => ({ ...m, [a.state]: (m[a.state] || 0) + 1 }), {});
