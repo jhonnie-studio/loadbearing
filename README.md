@@ -32,6 +32,10 @@ Three kinds of check, all deterministic (no LLM calls, no data leaves Atlassian;
 
 An assumption within one step (or 10 %) of its limit is shown **at risk** before it breaks.
 
+## Use Tripwire from your own AI agent (MCP)
+
+The same four tools are exposed through the Atlassian MCP server (`rovo:mcp`). An open-source skill file, [`skills/tripwire/SKILL.md`](skills/tripwire/SKILL.md), tells third-party agents (Claude, Cursor, and others) how to connect and when to call each tool, so a coding agent can check whether the plan behind its work is still true before it starts.
+
 ## Try it
 
 1. Install the app (installation link in the Devpost submission).
