@@ -5,7 +5,7 @@
   "description": "Loadbearing: bind plan assumptions in Confluence to live Jira checks",
   "license": "MIT",
   "scripts": {
-    "test": "node --test test/"
+    "test": "node --test test/*.test.js"
   },
   "dependencies": {
     "@forge/api": "^8.5.0",

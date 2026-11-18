@@ -34,6 +34,15 @@ Three kinds of check, all deterministic (no LLM calls, no data leaves Atlassian;
 
 An assumption within one step (or 10 %) of its limit is shown **at risk** before it breaks.
 
+## What it does not do
+
+We would rather you know the limits up front:
+
+- **A JQL check is a stand-in for reality, not reality itself.** "Fewer than 3 Sev-1 bugs" is only as true as the `sev1` label on your issues. If the team does not label, Loadbearing cannot see it.
+- **It only watches Jira.** Assumptions about things outside Jira (a vendor's promise, a market number) cannot be bound to a check yet.
+- **You write the assumptions yourself.** There is no AI extraction from the page; that keeps every verdict explainable in numbers and costs nothing to run.
+- **Speed depends on the cause.** A change to a Jira issue re-checks within seconds. Time passing (a deadline getting close) is picked up by the hourly check.
+
 ## Use Loadbearing from your own AI agent (MCP)
 
 The same four tools are exposed through the Atlassian MCP server (`rovo:mcp`). An open-source skill file, [`skills/loadbearing/SKILL.md`](skills/loadbearing/SKILL.md), tells third-party agents (Claude, Cursor, and others) how to connect and when to call each tool, so a coding agent can check whether the plan behind its work is still true before it starts.
